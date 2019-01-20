@@ -1,4 +1,4 @@
-** UNDER DEVELOPMENT **
+** (preALPHA) UNDER DEVELOPMENT **
 
 Python3 MQTT client that listens for commands to control your WS2801 RGB ledstripe (aka Neopixel) if they are connected directly to your Rasberry PI SPI bus. You can light up individual LEDs, color the whole stripe, or playback effects and 1D animations.
 Allows easy integration with home assistant and other smarthome solutions.
