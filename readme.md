@@ -9,4 +9,18 @@ We use python3 virtualenv
 * `sudo apt-get install python3 python3-pip virtualenvwrapper`
 * `mkvirtualenv -p /usr/bin/python3 leds2mqtt`
 * `workon leds2mqtt`
-* `pip install adafruit-ws2801 RPi.GPIO`
+* `pip install adafruit-ws2801 RPi.GPIO paho-mqtt`
+
+## NOT
+
+* only 1D -> stripes
+* only RGB stripes with single aderssable pixels
+
+## See also
+
+Similar projects 
+
+* [led there be light](https://github.com/rikvermeer/led_there_be_light) 2013 Python effect framework, only lpd8806  via Raspberry SPI
+* [Open Websocket Ledstrip Server](https://github.com/ronbuist/owls) 2018 Python websocket service for Scratch IDE
+* [rpi-ledstripe](https://github.com/nigeil/rpi-ledstrip) 2018 Python MQTT controlled but complete LEDs
+* [ESP-MQTT-JSON-Digital-LEDs](https://github.com/bruhautomation/ESP-MQTT-JSON-Digital-LEDs) 2017 C, similar idea for ESP8266 boards
