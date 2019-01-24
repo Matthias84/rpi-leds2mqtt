@@ -16,6 +16,16 @@ We use python3 virtualenv
 * only 1D -> stripes
 * only RGB stripes with single aderssable pixels
 
+## Homeassistant
+
+```yaml
+light:
+- platform: mqtt
+    name: "Leuchtstreifen"
+    command_topic: "ledstripe/set"
+    optimistic: true
+```
+
 ## See also
 
 Similar projects 
