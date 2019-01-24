@@ -12,6 +12,7 @@ PIXEL_COUNT = 64
 SPI_PORT   = 0
 SPI_DEVICE = 0
 pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+ledson = 42 # debouncing HASS repeated ON commands
 
 
 def on_connect(client, userdata, flags, rc):
@@ -33,22 +34,35 @@ def on_message(client, userdata, msg):
     print(msg.topic)
     print(msg.payload)
     if msg.topic == 'ledstripe/set' :
-        print(msg.payload.decode() == 'ON')
+        print(ledson)
         if msg.payload.decode() == 'ON':
             print("LEDS on")
-            leds_on()
+            if ledson == False:
+                leds_on()
         elif 'OFF':
             print("LEDS off")
             leds_off()
+    if msg.topic == 'ledstripe/rgb/set' :
+        print("LEDs RGB:" + msg.payload.decode())
+        rgb = msg.payload.decode().split(',')
+        leds_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+        
 
 def leds_off():
+    global ledson
+    ledson = False
     pixels.clear()
     pixels.show()
 
 def leds_on():
-    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(0,255,0))
+    global ledson
+    ledson = True
+    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(0,0,64))
     pixels.show()
 
+def leds_rgb(r,g,b):
+    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
+    pixels.show()
 
 def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
     for i in range(blink_times):
