@@ -34,6 +34,7 @@ GAMMA_LUT = [    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255]
 
+global client
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -67,19 +68,34 @@ def on_message(client, userdata, msg):
     if msg.topic == 'ledstripe/rgb/set' :
         print("LEDs RGB:" + msg.payload.decode())
         rgb = msg.payload.decode().split(',')
-        leds_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
-        
+        leds_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))        
+
+def notifyEnabledChange(enabled):
+    if client:
+        print("pub LEDs " + str(enabled))
+        if enabled==True:
+            enabled="on"
+        else: "off"
+        client.publish('ledstripe/status', enabled)
+
+def notifyRGBchange(color):
+    color = ','.join(map(str, color))
+    print("pub LEDs RGB:" + color)
+    client.publish('ledstripe/rgb/status', color)
+
 
 def leds_off():
     global ledson
     ledson = False
+    notifyEnabledChange(ledson)
     pixels.clear()
     pixels.show()
 
 def leds_on():
     global ledson
     ledson = True
-    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(0,0,10))
+    notifyEnabledChange(ledson)
+    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(1,25,10))
     pixels.show()
 
 def leds_rgb(r,g,b):
@@ -88,7 +104,11 @@ def leds_rgb(r,g,b):
     b = GAMMA_LUT[b]
     pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
     pixels.show()
-    
+    notifyRGBchange()
+
+def get_leds_rgb():
+    r,g,b = pixels.get_pixel_rgb(0) #TODO: better single color definition for whole stripe
+    return r,g,b
 
 """
 def leds_brightness(perc):
@@ -113,6 +133,8 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
         time.sleep(wait)
 
 if __name__ == "__main__":
+    global client
+    client = None
     # Clear all the pixels to turn them off.
     leds_off()
     #blink_color(pixels, blink_times = 2, wait=1.0, color=(0, 255, 0))

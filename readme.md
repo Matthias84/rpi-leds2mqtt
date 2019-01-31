@@ -22,7 +22,10 @@ We use python3 virtualenv
 light:
 - platform: mqtt
     name: "Leuchtstreifen"
+    state_topic: "ledstripe/status"
     command_topic: "ledstripe/set"
+    rgb_state_topic: "ledstripe/rgb/status"
+    rgb_command_topic: "ledstripe/rgb/set"
     optimistic: true
 ```
 
