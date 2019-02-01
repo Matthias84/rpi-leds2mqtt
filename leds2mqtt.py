@@ -35,6 +35,7 @@ GAMMA_LUT = [    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255]
 
 global client
+global brightness
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -52,6 +53,7 @@ def on_subscribe(client, userdata, mid, granted_qos):
     print("Subscribed: "+str(mid)+" "+str(granted_qos))
 
 def on_message(client, userdata, msg):
+    global brightness
     print(msg.topic)
     print(msg.payload)
     if msg.topic == 'ledstripe/set' :
@@ -64,11 +66,17 @@ def on_message(client, userdata, msg):
             print("LEDS off")
             leds_off()
     if msg.topic == 'ledstripe/brightness/set' :
-        print("LEDs brightness:" + msg.payload.decode())
+        val = int(msg.payload.decode())
+        if (val >= 0) and (val <= 100):
+            val = val / 100.0
+            print("LEDs brightness:" + str(val))
+            setBrightness(val)
+        else:
+            print("invalid value")
     if msg.topic == 'ledstripe/rgb/set' :
         print("LEDs RGB:" + msg.payload.decode())
         rgb = msg.payload.decode().split(',')
-        leds_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))        
+        leds_rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
 
 def notifyEnabledChange(enabled):
     if client:
@@ -82,6 +90,9 @@ def notifyRGBchange(color):
     color = ','.join(map(str, color))
     print("pub LEDs RGB:" + color)
     client.publish('ledstripe/rgb/status', color)
+
+def notifyBrightnessChange(perc):
+    client.publish('ledstripe/brightness/status', int(perc* 100))
 
 
 def leds_off():
@@ -99,24 +110,21 @@ def leds_on():
     pixels.show()
 
 def leds_rgb(r,g,b):
-    r = GAMMA_LUT[r]
-    g = GAMMA_LUT[g]
-    b = GAMMA_LUT[b]
+    r = int(GAMMA_LUT[r] * brightness)
+    g = int(GAMMA_LUT[g] * brightness)
+    b = int(GAMMA_LUT[b] * brightness)
+    print("calc x{}: R{} G{} B{}".format(brightness, r,g,b))
     pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
     pixels.show()
     notifyRGBchange()
 
-def get_leds_rgb():
-    r,g,b = pixels.get_pixel_rgb(0) #TODO: better single color definition for whole stripe
-    return r,g,b
+def setBrightness(perc):
+    global brightness
+    print("LEDs brightness oerc:" + str(perc))
+    if (perc >= 0.0) and (perc <=1.0):
+        notifyBrightnessChange(perc)
+        brightness = perc
 
-"""
-def leds_brightness(perc):
-    for i in range(PIXEL_COUNT):
-        c = pixels.get_pixel_rgb(i)
-        hsv =  colorsys.rgb_to_hsv(c)
-        c = 
-"""
 
 def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
     for i in range(blink_times):
@@ -135,6 +143,7 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 if __name__ == "__main__":
     global client
     client = None
+    brightness = 1.0
     # Clear all the pixels to turn them off.
     leds_off()
     #blink_color(pixels, blink_times = 2, wait=1.0, color=(0, 255, 0))

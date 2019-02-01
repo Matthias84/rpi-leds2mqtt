@@ -24,6 +24,8 @@ light:
     name: "Leuchtstreifen"
     state_topic: "ledstripe/status"
     command_topic: "ledstripe/set"
+    brightness_command_topic: "ledstripe/brightness/set"
+    brightness_scale: 100
     rgb_state_topic: "ledstripe/rgb/status"
     rgb_command_topic: "ledstripe/rgb/set"
     optimistic: true
