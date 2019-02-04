@@ -7,12 +7,6 @@ import Adafruit_GPIO.SPI as SPI
 # Configure the count of pixels:
 PIXEL_COUNT = 64
 
-# Alternatively specify a hardware SPI connection on /dev/spidev0.0:
-SPI_PORT   = 0
-SPI_DEVICE = 0
-pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
-ledson = True # debouncing HASS repeated ON commands
-
 # https://learn.adafruit.com/led-tricks-gamma-correction/the-quick-fix
 # Avoid to bright colors
 GAMMA_LUT = [    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -32,29 +26,7 @@ GAMMA_LUT = [    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255]
 
-
-def leds_off():
-    pixels.clear()
-    pixels.show()
-
-def leds_on():
-    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(1,25,10))
-    pixels.show()
-
-def leds_rgb(r,g,b):
-    r = int(GAMMA_LUT[r] * brightness)
-    g = int(GAMMA_LUT[g] * brightness)
-    b = int(GAMMA_LUT[b] * brightness)
-    print("calc x{}: R{} G{} B{}".format(brightness, r,g,b))
-    pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
-    pixels.show()
-
-def setBrightness(perc):
-    global brightness
-    print("LEDs brightness oerc:" + str(perc))
-    if (perc >= 0.0) and (perc <=1.0):
-        brightness = perc
-
+#blink_color(pixels, blink_times = 2, wait=1.0, color=(0, 255, 0))
 def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
     for i in range(blink_times):
         # blink two times, then wait
@@ -69,3 +41,43 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
             time.sleep(0.08)
         time.sleep(wait)  
 
+class LEDstripe():
+    """LED control logic for WS2801 based LED stripsets connected via SPI on a Raspberry PI"""
+    
+    def __init__(self):
+        self.data = []
+        self.enabled = False # debouncing HASS repeated ON commands
+        self.brightness = 1.0
+        self.color = 0, 0, 128
+        # hardware init
+        SPI_PORT   = 0 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
+        SPI_DEVICE = 0
+        self.pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+        self.off()
+
+    def off(self):
+        if self.enabled: 
+            self.pixels.clear()
+            self.pixels.show()
+            self.enabled = False 
+
+    def on(self):
+        if not self.enabled:
+            self.pixels.set_pixels(Adafruit_WS2801.RGB_to_color(self.color[0], self.color[1], self.color[2]))
+            self.pixels.show()
+            self.enabled = True 
+    
+    def rgb(self, r,g,b):
+        self.color = r,g,b
+        r = int(GAMMA_LUT[r] * self.brightness)
+        g = int(GAMMA_LUT[g] * self.brightness)
+        b = int(GAMMA_LUT[b] * self.brightness)
+        print("calc x{}: R{} G{} B{}".format(self.brightness, r, g, b))
+        self.pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
+        self.pixels.show()
+    
+    def setBrightness(self, perc):
+        print("LEDs brightness perc:" + str(perc))
+        if (perc >= 0.0) and (perc <=1.0):
+            self.brightness = perc
+        #TODO: update all colors
