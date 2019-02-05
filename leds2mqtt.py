@@ -1,3 +1,4 @@
+import argparse
 import time
 import paho.mqtt.client as mqtt
 
@@ -52,7 +53,6 @@ def on_log(client, userdata, level, buff):
     print(userdata)
     print(buff)
 
-
 def notifyEnabledChange(enabled):
     if client:
         print("pub LEDs " + str(enabled))
@@ -70,16 +70,23 @@ if __name__ == "__main__":
     global client
     global led
     client = None
-    # init MQTT
-    client = mqtt.Client()
-    client.on_log = on_log
-    client.on_connect = on_connect
-    client.on_subscribe = on_subscribe
-    client.on_message = on_message
-    client.username_pw_set('homeassistant', 'hello')
-    client.connect("localhost", 1883, 60)
+    #parse CLI
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-lt','--ledtest', help='Only selftest LED strip hardware', action='store_true')
+    args = vars(parser.parse_args())
     # init LEDs
     led = LEDstripe()
+    led.off()
     print(led.color)
-    led.on()
-    client.loop_forever()
+    if 'ledtest' in args:
+        led.blink()
+    else:
+        # init MQTT
+        client = mqtt.Client()
+        client.on_log = on_log
+        client.on_connect = on_connect
+        client.on_subscribe = on_subscribe
+        client.on_message = on_message
+        client.username_pw_set('homeassistant', 'hello')
+        client.connect("localhost", 1883, 60)
+        client.loop_forever()
