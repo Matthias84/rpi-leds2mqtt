@@ -79,7 +79,8 @@ class LEDstripe():
         print("LEDs brightness perc:" + str(perc))
         if (perc >= 0.0) and (perc <=1.0):
             self.brightness = perc
-        #TODO: update all colors
+            if self.enabled:
+                self.rgb(self.color[0], self.color[1], self.color[2])
 
     def blink(self, times=3):
         for x in range(times):
