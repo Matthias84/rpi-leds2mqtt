@@ -4,8 +4,6 @@ import RPi.GPIO as GPIO
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
 
-# Configure the count of pixels:
-PIXEL_COUNT = 64
 
 # https://learn.adafruit.com/led-tricks-gamma-correction/the-quick-fix
 # Avoid to bright colors
@@ -44,14 +42,15 @@ def blink_color(pixels, blink_times=5, wait=0.5, color=(255,0,0)):
 class LEDstripe():
     """LED control logic for WS2801 based LED stripsets connected via SPI on a Raspberry PI"""
     
-    def __init__(self):
+    def __init__(self, port, device, pixel, color, brightness):
         self.data = []
         self.enabled = False # debouncing HASS repeated ON commands
-        self.brightness = 1.0
-        self.color = 0, 0, 128
+        self.brightness = brightness
+        self.color = color
         # hardware init
-        SPI_PORT   = 0 # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
-        SPI_DEVICE = 0
+        SPI_PORT   = port # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
+        SPI_DEVICE = device
+        PIXEL_COUNT = pixel
         self.pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
         self.off()
 

@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import logging
 import time
 import paho.mqtt.client as mqtt
@@ -70,7 +71,13 @@ if __name__ == "__main__":
     global client
     global led
     client = None
-    #parse CLI
+    # init config
+    conf = configparser.ConfigParser() 
+    conf.read('leds2mqtt.conf')
+    #anzahl leds
+    # SPI Port und Device
+    # MQTT server, user, pass
+    # init CLI
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', help="Print debugging statements",
         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO,
@@ -81,7 +88,11 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s  %(levelname)s:%(message)s', level=args['loglevel'])
     # init LEDs
     logging.info('Enable LED stripe')
-    led = LEDstripe()
+    led = LEDstripe(port = int(conf['leds']['port']),
+                    device = int(conf['leds']['device']),
+                    pixel = int(conf['leds']['pixel']),
+                    color = conf['leds']['color'],
+                    brightness = float(conf['leds']['brightness']))
     led.off()
     if  args['ledtest']:
         logging.info('LED test')
@@ -95,6 +106,6 @@ if __name__ == "__main__":
         client.on_connect = on_connect
         client.on_subscribe = on_subscribe
         client.on_message = on_message
-        client.username_pw_set('homeassistant', 'hello')
-        client.connect("localhost", 1883, 60)
+        client.username_pw_set(conf['mqtt']['user'], conf['mqtt']['password'])
+        client.connect(conf['mqtt']['host'], 1883, 60)
         client.loop_forever()
