@@ -1,4 +1,5 @@
 import argparse
+import logging
 import time
 import paho.mqtt.client as mqtt
 
@@ -8,7 +9,7 @@ global client
 global led
 
 def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
+    logging.debug("Connected with result code " + str(rc))
     """
     0: Connection successful
     1: Connection refused - incorrect protocol version
@@ -20,21 +21,20 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("ledstripe/#")
 
 def on_subscribe(client, userdata, mid, granted_qos):
-    print("Subscribed: "+str(mid)+" "+str(granted_qos))
+    logging.debug("Subscribed: "+str(mid)+" "+str(granted_qos))
 
 def on_message(client, userdata, msg):
-    print(msg.topic)
-    print(msg.payload)
+    logging.debug("MESSAGE: "+str(msg.topic)+" "+str(msg.payload))
     if msg.topic == 'ledstripe/set' :
         if msg.payload.decode() == 'ON':
-            print("LEDS on")
+            logging.info("LEDS on")
             led.on()
         elif 'OFF':
-            print("LEDS off")
+            logging.info("LEDS off")
             led.off()
         notifyEnabledChange(led.enabled)
     if msg.topic == 'ledstripe/rgb/set' :
-        print("LEDs RGB:" + msg.payload.decode())
+        logging.info("LEDs RGB:" + msg.payload.decode())
         rgb = msg.payload.decode().split(',')
         led.rgb(int(rgb[0]),int(rgb[1]),int(rgb[2]))
         notifyRGBchange(rgb)
@@ -42,28 +42,28 @@ def on_message(client, userdata, msg):
         val = int(msg.payload.decode())
         if (val >= 0) and (val <= 100):
             val = val / 100.0
-            print("LEDs brightness:" + str(val))
+            logging.info("LEDs brightness:" + str(val))
             led.setBrightness(val)
             notifyBrightnessChange(val)
         else:
-            print("invalid value")
+            logging.error("invalid brightness value")
 
 def on_log(client, userdata, level, buff):
     #otherwise we have silent exceptions
-    print(userdata)
-    print(buff)
+    logging.log(level, userdata+buff)
 
 def notifyEnabledChange(enabled):
     if client:
-        print("pub LEDs " + str(enabled))
+        logging.info("pub LEDs " + str(enabled))
         client.publish('ledstripe/status', enabled)
 
 def notifyRGBchange(color):
     color = ','.join(map(str, color))
-    print("pub LEDs RGB:" + color)
+    logging.info("pub LEDs RGB:" + color)
     client.publish('ledstripe/rgb/status', color)
 
 def notifyBrightnessChange(perc):
+    logging.info("pub LEDs brightness:" + perc)
     client.publish('ledstripe/brightness/status', int(perc* 100))
 
 if __name__ == "__main__":
@@ -72,16 +72,24 @@ if __name__ == "__main__":
     client = None
     #parse CLI
     parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--debug', help="Print debugging statements",
+        action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO,
+    )
     parser.add_argument('-lt','--ledtest', help='Only selftest LED strip hardware', action='store_true')
     args = vars(parser.parse_args())
+    # init logging
+    logging.basicConfig(format='%(asctime)s  %(levelname)s:%(message)s', level=args['loglevel'])
     # init LEDs
+    logging.info('Enable LED stripe')
     led = LEDstripe()
     led.off()
-    print(led.color)
-    if 'ledtest' in args:
+    if  args['ledtest']:
+        logging.info('LED test')
         led.blink()
+        logging.info('LED test done')
     else:
         # init MQTT
+        logging.info('Enable MQTT listener')
         client = mqtt.Client()
         client.on_log = on_log
         client.on_connect = on_connect
