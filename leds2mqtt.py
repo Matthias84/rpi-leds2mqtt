@@ -8,6 +8,7 @@ from leds.ws2801spirpi import LEDstripe
 
 global client
 global led
+global effect
 
 def on_connect(client, userdata, flags, rc):
     logging.debug("Connected with result code " + str(rc))
@@ -25,6 +26,7 @@ def on_subscribe(client, userdata, mid, granted_qos):
     logging.debug("Subscribed: "+str(mid)+" "+str(granted_qos))
 
 def on_message(client, userdata, msg):
+    global effect
     logging.debug("MESSAGE: "+str(msg.topic)+" "+str(msg.payload))
     if msg.topic == 'ledstripe/set' :
         if msg.payload.decode() == 'ON':
@@ -48,6 +50,15 @@ def on_message(client, userdata, msg):
             notifyBrightnessChange(val)
         else:
             logging.error("invalid brightness value")
+    if msg.topic == 'ledstripe/effect/set' :
+        fx = str(msg.payload.decode())
+        logging.info("LEDs effect:" + str(fx))
+        if fx == 'blink':
+            effect = 'blink'
+            notifyEffectChange()
+            led.blink()
+        effect = None
+        notifyEffectChange()
 
 def on_log(client, userdata, level, buff):
     #otherwise we have silent exceptions
@@ -67,16 +78,19 @@ def notifyBrightnessChange(perc):
     logging.info("pub LEDs brightness:" + perc)
     client.publish('ledstripe/brightness/status', int(perc* 100))
 
+def notifyEffectChange():
+    logging.info("pub LEDs effect:" + effect)
+    client.publish('ledstripe/effect/status', effect)
+
 if __name__ == "__main__":
     global client
     global led
+    global effect
     client = None
+    effect = None
     # init config
     conf = configparser.ConfigParser() 
     conf.read('leds2mqtt.conf')
-    #anzahl leds
-    # SPI Port und Device
-    # MQTT server, user, pass
     # init CLI
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', help="Print debugging statements",
@@ -93,7 +107,6 @@ if __name__ == "__main__":
                     pixel = int(conf['leds']['pixel']),
                     color = conf['leds']['color'],
                     brightness = float(conf['leds']['brightness']))
-    led.off()
     if  args['ledtest']:
         logging.info('LED test')
         led.blink()

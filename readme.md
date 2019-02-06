@@ -28,6 +28,11 @@ light:
     brightness_scale: 100
     rgb_state_topic: "ledstripe/rgb/status"
     rgb_command_topic: "ledstripe/rgb/set"
+    effect_list:
+        - blink
+        - dummy
+    effect_command_topic: "ledstripe/effect/set"
+    effect_state_topic: "ledstripe/effect/status"
     optimistic: true
 ```
 

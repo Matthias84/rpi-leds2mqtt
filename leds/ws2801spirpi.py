@@ -44,7 +44,7 @@ class LEDstripe():
     
     def __init__(self, port, device, pixel, color, brightness):
         self.data = []
-        self.enabled = False # debouncing HASS repeated ON commands
+        self.enabled = True # debouncing HASS repeated ON commands
         self.brightness = brightness
         self.color = color
         # hardware init
@@ -52,6 +52,7 @@ class LEDstripe():
         SPI_DEVICE = device
         PIXEL_COUNT = pixel
         self.pixels = Adafruit_WS2801.WS2801Pixels(PIXEL_COUNT, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE), gpio=GPIO)
+        time.sleep(0.1)
         self.off()
 
     def off(self):
