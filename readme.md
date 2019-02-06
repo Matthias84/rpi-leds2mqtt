@@ -33,7 +33,7 @@ light:
         - dummy
     effect_command_topic: "ledstripe/effect/set"
     effect_state_topic: "ledstripe/effect/status"
-    optimistic: true
+    optimistic: false
 ```
 
 ## See also

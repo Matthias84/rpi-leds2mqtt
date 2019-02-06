@@ -10,6 +10,8 @@ global client
 global led
 global effect
 
+bool2mqtt = {True: "ON", False: "OFF"}
+
 def on_connect(client, userdata, flags, rc):
     logging.debug("Connected with result code " + str(rc))
     """
@@ -62,10 +64,11 @@ def on_message(client, userdata, msg):
 
 def on_log(client, userdata, level, buff):
     #otherwise we have silent exceptions
-    logging.log(level, userdata+buff)
+    logging.log(level, userdata+'-'+buff)
 
 def notifyEnabledChange(enabled):
     if client:
+        enabled = bool2mqtt[enabled]
         logging.info("pub LEDs " + str(enabled))
         client.publish('ledstripe/status', enabled)
 
@@ -121,4 +124,5 @@ if __name__ == "__main__":
         client.on_message = on_message
         client.username_pw_set(conf['mqtt']['user'], conf['mqtt']['password'])
         client.connect(conf['mqtt']['host'], 1883, 60)
+        notifyEnabledChange(led.enabled)
         client.loop_forever()

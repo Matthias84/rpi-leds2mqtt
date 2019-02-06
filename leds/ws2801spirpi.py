@@ -1,5 +1,7 @@
-import time
 import colorsys
+import logging
+import time
+
 import RPi.GPIO as GPIO
 import Adafruit_WS2801
 import Adafruit_GPIO.SPI as SPI
@@ -46,6 +48,11 @@ class LEDstripe():
         self.data = []
         self.enabled = True # debouncing HASS repeated ON commands
         self.brightness = brightness
+        if type(color) == str:
+            color = color.split(',')
+            color[0] = int(color[0])
+            color[1] = int(color[1])
+            color[2] = int(color[2])
         self.color = color
         # hardware init
         SPI_PORT   = port # Alternatively specify a hardware SPI connection on /dev/spidev0.0:
@@ -56,12 +63,14 @@ class LEDstripe():
         self.off()
 
     def off(self):
+        logging.debug("Turn LED off (from {})".format(self.enabled))
         if self.enabled: 
             self.pixels.clear()
             self.pixels.show()
             self.enabled = False 
 
     def on(self):
+        logging.debug("Turn LED on (from {})".format(self.enabled))
         if not self.enabled:
             self.pixels.set_pixels(Adafruit_WS2801.RGB_to_color(self.color[0], self.color[1], self.color[2]))
             self.pixels.show()
@@ -72,18 +81,21 @@ class LEDstripe():
         r = int(GAMMA_LUT[r] * self.brightness)
         g = int(GAMMA_LUT[g] * self.brightness)
         b = int(GAMMA_LUT[b] * self.brightness)
-        print("calc x{}: R{} G{} B{}".format(self.brightness, r, g, b))
+        logging.debug("calc x{}: R{} G{} B{}".format(self.brightness, r, g, b))
         self.pixels.set_pixels(Adafruit_WS2801.RGB_to_color(r,g,b))
         self.pixels.show()
     
     def setBrightness(self, perc):
-        print("LEDs brightness perc:" + str(perc))
+        logging.debug("LEDs brightness perc:" + str(perc))
         if (perc >= 0.0) and (perc <=1.0):
             self.brightness = perc
             if self.enabled:
                 self.rgb(self.color[0], self.color[1], self.color[2])
+            else:
+                logging.error("Invalid brightness:" + str(perc))
 
     def blink(self, times=3):
+        logging.info("blink stripe {} times (current color)".format(times))
         for x in range(times):
             self.on()
             time.sleep(0.5)
