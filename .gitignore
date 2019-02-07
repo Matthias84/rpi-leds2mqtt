@@ -1,2 +1,3 @@
 leds2mqtt.geany
 __pycache__/
+*.py[cod]
