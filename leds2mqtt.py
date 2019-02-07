@@ -59,6 +59,10 @@ def on_message(client, userdata, msg):
             effect = 'blink'
             notifyEffectChange()
             led.blink()
+        if fx == 'flash':
+            effect = 'flash'
+            notifyEffectChange()
+            led.flash()
         effect = None
         notifyEffectChange()
 
@@ -100,6 +104,7 @@ if __name__ == "__main__":
         action="store_const", dest="loglevel", const=logging.DEBUG, default=logging.INFO,
     )
     parser.add_argument('-lt','--ledtest', help='Only selftest LED strip hardware', action='store_true')
+    parser.add_argument('-et','--effecttest', choices=['blink','flash'], action='store')
     args = vars(parser.parse_args())
     # init logging
     logging.basicConfig(format='%(asctime)s  %(levelname)s:%(message)s', level=args['loglevel'])
@@ -114,6 +119,13 @@ if __name__ == "__main__":
         logging.info('LED test')
         led.blink()
         logging.info('LED test done')
+    elif args['effecttest']:
+        logging.info('Effect test ({})' + args['effecttest'])
+        if args['effecttest'] == 'blink':
+            led.blink()
+        elif args['effecttest'] == 'flash':
+            led.flash()
+        logging.info('Effect test done')
     else:
         # init MQTT
         logging.info('Enable MQTT listener')

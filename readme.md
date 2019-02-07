@@ -30,6 +30,7 @@ light:
     rgb_command_topic: "ledstripe/rgb/set"
     effect_list:
         - blink
+        - flash
         - dummy
     effect_command_topic: "ledstripe/effect/set"
     effect_state_topic: "ledstripe/effect/status"

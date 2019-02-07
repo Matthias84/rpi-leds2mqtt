@@ -94,10 +94,15 @@ class LEDstripe():
             else:
                 logging.error("Invalid brightness:" + str(perc))
 
-    def blink(self, times=3):
+    def blink(self, times=3, timeOff=0.5, timeOn=0.5):
         logging.info("blink stripe {} times (current color)".format(times))
         for x in range(times):
             self.on()
-            time.sleep(0.5)
+            time.sleep(timeOn)
             self.off()
-            time.sleep(0.5)
+            time.sleep(timeOff)
+    
+    def flash(self):
+        """Fast flashing all LEDs (current color)"""
+        self.blink(2, timeOff= 0.5, timeOn=0.1)
+        
